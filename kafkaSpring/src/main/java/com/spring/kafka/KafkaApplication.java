@@ -10,6 +10,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -20,9 +21,14 @@ public class KafkaApplication implements CommandLineRunner {
 	@Autowired
 	private KafkaTemplate<String, String> kafkaTemplate;
 
-	@KafkaListener(topics = "gonza-topic", groupId = "gonza-group")
-	public void listen(String message){
-		log.info("Message received {}", message);
+	@KafkaListener(topics = "gonza-topic", containerFactory = "listenerContainerFactory",
+			groupId = "gonza-group", properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
+	public void listen(List<String> messages){
+		log.info("Start reading messages");
+		for (String message : messages) {
+			log.info("Message received {}", message);
+		}
+		log.info("Batch Complete");
 	}
 
 	public static void main(String[] args) {
@@ -32,15 +38,10 @@ public class KafkaApplication implements CommandLineRunner {
 	// Asincrono
 	@Override
 	public void run(String... args) throws Exception {
-		CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send("gonza-topic", "Sample message");
+		for (int i = 0; i < 100; i++) {
+			kafkaTemplate.send("gonza-topic", String.format("Sample message %d", i));
+		}
 
-		future.whenComplete((result, exception) -> {
-			if (exception == null) {
-				log.info("Message sent, offset: {}", result.getRecordMetadata().offset());
-			} else {
-				log.error("Error sending message:", exception);
-			}
-		});
 	}
 
 	/**

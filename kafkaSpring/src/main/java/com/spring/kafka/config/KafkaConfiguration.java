@@ -48,10 +48,11 @@ public class KafkaConfiguration {
     }
 
     // Para leer mensaje por mensaje
-    @Bean
+    @Bean(name = "listenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, String> listenerContainerFactory(){
         ConcurrentKafkaListenerContainerFactory<String, String> listenerContainerFactory = new ConcurrentKafkaListenerContainerFactory<>();
         listenerContainerFactory.setConsumerFactory(consumerFactory());
+        listenerContainerFactory.setBatchListener(true);
         return listenerContainerFactory;
     }
 
