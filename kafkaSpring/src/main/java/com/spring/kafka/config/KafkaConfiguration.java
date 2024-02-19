@@ -2,7 +2,6 @@ package com.spring.kafka.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
@@ -53,6 +52,7 @@ public class KafkaConfiguration {
         ConcurrentKafkaListenerContainerFactory<String, String> listenerContainerFactory = new ConcurrentKafkaListenerContainerFactory<>();
         listenerContainerFactory.setConsumerFactory(consumerFactory());
         listenerContainerFactory.setBatchListener(true);
+        listenerContainerFactory.setConcurrency(3); // Para hacerlo concurrente agregar esta configuracion con la cantidad de hilos que necesitas
         return listenerContainerFactory;
     }
 
