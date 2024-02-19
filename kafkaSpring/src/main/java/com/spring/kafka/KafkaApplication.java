@@ -7,13 +7,10 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFuture;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @SpringBootApplication
@@ -22,7 +19,10 @@ public class KafkaApplication implements CommandLineRunner {
 	@Autowired
 	private KafkaTemplate<String, String> kafkaTemplate;
 
-	@KafkaListener(topics = "gonza-topic", containerFactory = "listenerContainerFactory",
+	@Autowired
+	private KafkaListenerEndpointRegistry registry;
+
+	@KafkaListener(id = "gonzaId", topics = "gonza-topic", autoStartup = "false", containerFactory = "listenerContainerFactory",
 			groupId = "gonza-group", properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
 	public void listen(List<ConsumerRecord<String, String>> messages){
 		log.info("Start reading messages");
@@ -42,6 +42,13 @@ public class KafkaApplication implements CommandLineRunner {
 		for (int i = 0; i < 100; i++) {
 			kafkaTemplate.send("gonza-topic", String.valueOf(i), String.format("Sample message %d", i));
 		}
+		log.info("Waiting to start");
+		Thread.sleep(5000);
+		log.info("Starting");
+		registry.getListenerContainer("gonzaId").start();
+		Thread.sleep(5000);
+		registry.getListenerContainer("gonzaId").stop();
+		log.info("End");
 
 	}
 
