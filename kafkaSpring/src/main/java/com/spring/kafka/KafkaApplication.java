@@ -1,6 +1,7 @@
 package com.spring.kafka;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -23,10 +24,10 @@ public class KafkaApplication implements CommandLineRunner {
 
 	@KafkaListener(topics = "gonza-topic", containerFactory = "listenerContainerFactory",
 			groupId = "gonza-group", properties = {"max.poll.interval.ms:4000", "max.poll.records:10"})
-	public void listen(List<String> messages){
+	public void listen(List<ConsumerRecord<String, String>> messages){
 		log.info("Start reading messages");
-		for (String message : messages) {
-			log.info("Message received {}", message);
+		for (ConsumerRecord<String, String> message : messages) {
+			log.info("Partition = {}, Offset = {}, Key = {}, Value = {} ", message.partition(), message.offset(), message.key(), message.value());
 		}
 		log.info("Batch Complete");
 	}
@@ -39,7 +40,7 @@ public class KafkaApplication implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 		for (int i = 0; i < 100; i++) {
-			kafkaTemplate.send("gonza-topic", String.format("Sample message %d", i));
+			kafkaTemplate.send("gonza-topic", String.valueOf(i), String.format("Sample message %d", i));
 		}
 
 	}
